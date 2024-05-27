@@ -5,9 +5,9 @@ VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_BehaviorTree_AIImplementation", "AI_BehaviorTree_AIImplementation.csproj", "{B8AB6DF7-A5F6-408B-A1CC-85F7CC22B68A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonAPI", "C:\Users\jejar\source\repos\CommonAPI\CommonAPI.csproj", "{BB62E10B-02A8-4A4F-8C3B-FFF10AAEB4B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonAPI", "Projects\CommonAPI\CommonAPI.csproj", "{BB62E10B-02A8-4A4F-8C3B-FFF10AAEB4B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EJARQUE", "C:\Users\jejar\source\repos\EJARQUE\EJARQUE.csproj", "{580618BF-ECD9-4A42-B65D-B15D04F90D06}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EJARQUE", "Projects\EJARQUE\EJARQUE.csproj", "{580618BF-ECD9-4A42-B65D-B15D04F90D06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
