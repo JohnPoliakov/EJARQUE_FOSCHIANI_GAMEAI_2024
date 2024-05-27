@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AI_BehaviorTree_AIImplementation</RootNamespace>
-    <AssemblyName>AI_BehaviorTree_AIImplementation_1</AssemblyName>
+    <AssemblyName>AI_BehaviorTree_AIImplementation_0</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.19041.0</TargetPlatformVersion>
@@ -139,6 +139,12 @@
       <HintPath>..\UnityEditor\2022.3.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\jejar\source\repos\EJARQUE\EJARQUE.csproj">
+      <Project>{580618bf-ecd9-4a42-b65d-b15d04f90d06}</Project>
+      <Name>EJARQUE</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

@@ -1,7 +1,6 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
-using System;
 using System.Collections.Generic;
-using UnityEngine;
+using EJARQUE;
 using UnityEngine.Assertions;
 
 namespace AI_BehaviorTree_AIImplementation
@@ -16,12 +15,14 @@ namespace AI_BehaviorTree_AIImplementation
         /// </summary>
         private int AIId = -1;
         public GameWorldUtils AIGameWorldUtils = new GameWorldUtils();
+        Skynet skynet = new Skynet();
+
 
         // Ne pas utiliser cette fonction, elle n'est utile que pour le jeu qui vous Set votre Id, si vous voulez votre Id utilisez AIId
         public void SetAIId(int parAIId) { AIId = parAIId; }
 
         // Vous pouvez modifier le contenu de cette fonction pour modifier votre nom en jeu
-        public string GetName() { return "MyAIName"; }
+        public string GetName() { return "Skynet"; }
 
         public void SetAIGameWorldUtils(GameWorldUtils parGameWorldUtils) { AIGameWorldUtils = parGameWorldUtils; }
 
@@ -29,7 +30,10 @@ namespace AI_BehaviorTree_AIImplementation
 
         public List<AIAction> ComputeAIDecision()
         {
-            List<AIAction> actionList = new List<AIAction>();
+
+            return skynet.ComputeAIDecision(AIId, AIGameWorldUtils.GetPlayerInfosList());
+
+            /*List<AIAction> actionList = new List<AIAction>();
             List<PlayerInformations> playerInfos = AIGameWorldUtils.GetPlayerInfosList();
             PlayerInformations myPlayerInfos = GetPlayerInfos(AIId, playerInfos);
 
@@ -64,7 +68,8 @@ namespace AI_BehaviorTree_AIImplementation
                     actionList.Add(new AIActionFire());
             }
 
-            return actionList;
+
+            return actionList;*/
         }
 
         public PlayerInformations GetPlayerInfos(int parPlayerId, List<PlayerInformations> parPlayerInfosList)
