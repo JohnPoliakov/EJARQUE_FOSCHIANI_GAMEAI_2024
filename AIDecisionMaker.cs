@@ -31,7 +31,7 @@ namespace AI_BehaviorTree_AIImplementation
         public List<AIAction> ComputeAIDecision()
         {
 
-            return skynet.ComputeAIDecision(AIId, AIGameWorldUtils.GetPlayerInfosList());
+            return skynet.ComputeAIDecision(AIId, AIGameWorldUtils);
 
             /*List<AIAction> actionList = new List<AIAction>();
             List<PlayerInformations> playerInfos = AIGameWorldUtils.GetPlayerInfosList();

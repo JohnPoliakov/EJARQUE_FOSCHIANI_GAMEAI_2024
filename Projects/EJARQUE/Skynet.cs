@@ -12,12 +12,12 @@ namespace EJARQUE
 {
     public class Skynet
     {
-        public List<AIAction> ComputeAIDecision(int myID, List<PlayerInformations> playerInfos)
+        public List<AIAction> ComputeAIDecision(int myID, GameWorldUtils utils)
         {
             List<AIAction> actionList = new List<AIAction>();
-            PlayerInformations myPlayerInfos = GetPlayerInfos(myID, playerInfos);
+            PlayerInformations myPlayerInfos = GetPlayerInfos(myID, utils.GetPlayerInfosList());
 
-            PlayerInformations target = SelectTarget(playerInfos, myPlayerInfos);
+            PlayerInformations target = SelectTarget(utils.GetPlayerInfosList(), myPlayerInfos);
 
             if (target == null)
                 return actionList;
@@ -31,22 +31,29 @@ namespace EJARQUE
             SequenceNode moveToTargetSequence = new SequenceNode();
             moveToTargetSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
             moveToTargetSequence.AddChild(new MoveToTargetNode(target.Transform.Position));
-
-            // Conditions
-            ConditionNode isTargetInRange = new IsTargetInRangeNode(target, 5.0f);
+            
+            // Dash if is danger
+            SequenceNode dashWhenLow = new SequenceNode();
+            dashWhenLow.AddChild(new IsDashAvailableNode());
+            dashWhenLow.AddChild(new IsInDangerNode(utils, 15));
+            dashWhenLow.AddChild(new DashNode(utils, 15));
 
 
             // Move to target if not in range
             SequenceNode moveToTargetConditionSequence = new SequenceNode();
-            moveToTargetConditionSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
-            moveToTargetConditionSequence.AddChild(isTargetInRange);
+            moveToTargetConditionSequence.AddChild(new IsTargetInRangeNode(target, 10.0f));
             moveToTargetConditionSequence.AddChild(moveToTargetSequence);
+            //moveToTargetConditionSequence.AddChild(isDashAvailable);
+            //moveToTargetConditionSequence.AddChild(new DashNode(target));
+
+            
+            SequenceNode moveFromTargetConditionSequence = new SequenceNode();
+            moveFromTargetConditionSequence.AddChild(dashWhenLow);
 
             // Compile Move and Shoot
             SequenceNode moveAttack = new SequenceNode();
             moveAttack.AddChild(attackSequence);
             moveAttack.AddChild(moveToTargetConditionSequence);
-
 
             root.AddChild(moveAttack);
 

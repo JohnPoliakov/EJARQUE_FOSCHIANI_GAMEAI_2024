@@ -6,7 +6,6 @@ namespace CommonAPI
 {
     public abstract class ActionNode
     {
-
         public abstract bool Execute(PlayerInformations playerInfo, List<AIAction> actionList);
     }
 }

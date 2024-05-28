@@ -126,6 +126,8 @@
     <Compile Include="Actions\StopMovementNode.cs" />
     <Compile Include="Actions\MoveToTargetNode.cs" />
     <Compile Include="Actions\LookAtTargetNode.cs" />
+    <Compile Include="Conditions\IsInDangerNode.cs" />
+    <Compile Include="Conditions\IsDashAvailableNode.cs" />
     <Compile Include="InverterNode.cs" />
     <Compile Include="ConditionNode.cs" />
     <Compile Include="Conditions\IsTargetInRangeNode.cs" />
