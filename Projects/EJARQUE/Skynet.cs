@@ -4,20 +4,23 @@ using CommonAPI.TreeBehaviour;
 using CommonAPI.Actions;
 using UnityEngine.Assertions;
 using CommonAPI.Conditions;
-using CommonAPI;
-using System;
 using UnityEngine;
 
 namespace EJARQUE
 {
     public class Skynet
     {
+
+        TargetData TargetData { get; set; }
+        bool searchBonus;
+        BonusInformations targetedBonus;
+
         public List<AIAction> ComputeAIDecision(int myID, GameWorldUtils utils)
         {
             List<AIAction> actionList = new List<AIAction>();
             PlayerInformations myPlayerInfos = GetPlayerInfos(myID, utils.GetPlayerInfosList());
 
-            PlayerInformations target = SelectTarget(utils.GetPlayerInfosList(), myPlayerInfos);
+            PlayerInformations target = SelectTarget(utils, myPlayerInfos);
 
             if (target == null)
                 return actionList;
@@ -26,34 +29,38 @@ namespace EJARQUE
 
             SequenceNode attackSequence = new SequenceNode();
             attackSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
+            //attackSequence.AddChild(new AnticipateTarget(target, TargetData.informations));
             attackSequence.AddChild(new FireAtTargetNode());
+            UpdateTargetData(target);
 
             SequenceNode moveToTargetSequence = new SequenceNode();
             moveToTargetSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
-            moveToTargetSequence.AddChild(new MoveToTargetNode(target.Transform.Position));
-            
+            if(searchBonus)
+                moveToTargetSequence.AddChild(new MoveToTargetNode(targetedBonus.Position));
+            else
+                moveToTargetSequence.AddChild(new MoveToTargetNode(target.Transform.Position));
+
             // Dash if is danger
             SequenceNode dashWhenLow = new SequenceNode();
             dashWhenLow.AddChild(new IsDashAvailableNode());
-            dashWhenLow.AddChild(new IsInDangerNode(utils, 15));
-            dashWhenLow.AddChild(new DashNode(utils, 15));
+            dashWhenLow.AddChild(new IsInDangerNode(utils, 6));
+            dashWhenLow.AddChild(new DashNode(utils, 6));
 
 
             // Move to target if not in range
             SequenceNode moveToTargetConditionSequence = new SequenceNode();
-            moveToTargetConditionSequence.AddChild(new IsTargetInRangeNode(target, 10.0f));
+            moveToTargetConditionSequence.AddChild(new IsTargetInRangeNode(target, 6.0f));
             moveToTargetConditionSequence.AddChild(moveToTargetSequence);
             //moveToTargetConditionSequence.AddChild(isDashAvailable);
             //moveToTargetConditionSequence.AddChild(new DashNode(target));
 
-            
-            SequenceNode moveFromTargetConditionSequence = new SequenceNode();
-            moveFromTargetConditionSequence.AddChild(dashWhenLow);
+           
 
             // Compile Move and Shoot
             SequenceNode moveAttack = new SequenceNode();
             moveAttack.AddChild(attackSequence);
             moveAttack.AddChild(moveToTargetConditionSequence);
+            //moveAttack.AddChild(dashWhenLow);
 
             root.AddChild(moveAttack);
 
@@ -62,13 +69,33 @@ namespace EJARQUE
             return actionList;
         }
 
-        private PlayerInformations SelectTarget(List<PlayerInformations> playerInfos, PlayerInformations myPlayerInfos)
+        private PlayerInformations SelectTarget(GameWorldUtils utils, PlayerInformations myPlayerInfos)
         {
             PlayerInformations targetData = null;
             float targetDistance = float.MaxValue;
             float targetHealth = float.MaxValue;
 
-            foreach (PlayerInformations playerInfo in playerInfos)
+            searchBonus = false;
+
+            if(utils.GetBonusInfosList().Count > 0)
+            {
+
+                foreach (BonusInformations bonusInfo in utils.GetBonusInfosList())
+                {
+                    if (myPlayerInfos.CurrentHealth <= 0.7f && Vector3.Distance(myPlayerInfos.Transform.Position, bonusInfo.Position) < 5)
+                    {
+                        searchBonus = true;
+                        targetedBonus = bonusInfo;
+                        break;
+                    }
+                }
+
+            }
+
+            
+
+
+            foreach (PlayerInformations playerInfo in utils.GetPlayerInfosList())
             {
                 if (!playerInfo.IsActive)
                     continue;
@@ -76,23 +103,33 @@ namespace EJARQUE
                 if (playerInfo.PlayerId == myPlayerInfos.PlayerId)
                     continue;
 
-                
+                float distanceFromTarget = Vector3.Distance(myPlayerInfos.Transform.Position, playerInfo.Transform.Position);
 
-                if (Vector3.Distance(playerInfo.Transform.Position, playerInfo.Transform.Position) < targetDistance)
+                if (distanceFromTarget < targetDistance)
                 {
                     targetData = playerInfo;
-                    targetDistance = Vector3.Distance(playerInfo.Transform.Position, playerInfo.Transform.Position);
+                    targetDistance = distanceFromTarget;
                 }
 
-                if(targetHealth > playerInfo.CurrentHealth)
+                if(targetHealth > playerInfo.CurrentHealth && distanceFromTarget <= 5)
                 {
                     targetHealth = playerInfo.CurrentHealth;
                     targetData = playerInfo;
                 }
 
-                //return playerInfo;
             }
+
+            if(targetData != null && (TargetData == null || TargetData.informations.PlayerId != targetData.PlayerId))
+            {
+                UpdateTargetData(targetData);
+            }
+
             return targetData;
+        }
+
+        private void UpdateTargetData(PlayerInformations informations)
+        {
+            TargetData = new TargetData(informations);
         }
 
         public PlayerInformations GetPlayerInfos(int parPlayerId, List<PlayerInformations> parPlayerInfosList)

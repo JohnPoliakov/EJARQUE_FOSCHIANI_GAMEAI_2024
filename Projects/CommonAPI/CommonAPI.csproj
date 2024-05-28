@@ -121,6 +121,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActionNode.cs" />
+    <Compile Include="Actions\AnticipateTarget.cs" />
     <Compile Include="Actions\DashNode.cs" />
     <Compile Include="Actions\FireAtTargetNode.cs" />
     <Compile Include="Actions\StopMovementNode.cs" />

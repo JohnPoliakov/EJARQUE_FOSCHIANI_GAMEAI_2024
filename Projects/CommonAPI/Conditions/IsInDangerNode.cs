@@ -20,9 +20,7 @@ namespace CommonAPI.Conditions
         {
 
             float health = playerInfo.CurrentHealth / playerInfo.MaxHealth;
-            bool isLow = health <= 0.5f || GetProjectiles(utils, playerInfo).Count >= 3;
-
-            
+            bool isLow = health <= 0.5f || GetProjectiles(utils, playerInfo).Count > 0;
 
             return isLow;
         }
