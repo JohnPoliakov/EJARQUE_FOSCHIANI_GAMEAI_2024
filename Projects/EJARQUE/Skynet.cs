@@ -27,6 +27,10 @@ namespace EJARQUE
         PlayerInformations myPlayerInfos;
         SelectorNode root;
 
+        // Positions précédentes et actuelle pour calculer la vitesse de la cible
+        Vector3 previousTargetPosition;
+        Vector3 currentTargetPosition;
+
         public Skynet()
         {
             root = new SelectorNode();
@@ -38,17 +42,17 @@ namespace EJARQUE
             runBonus.AddChild(new InverterNode(new IsTargetInRangeNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero, 1)));
             runBonus.AddChild(new DashToNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero));
             runBonus.AddChild(new HasTargetNode(() => targetProxy.Target));
-            runBonus.AddChild(new LookAtTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            runBonus.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
             runBonus.AddChild(new FireAtTargetNode());
 
             root.AddChild(runBonus);
 
             SequenceNode runTarget = new SequenceNode();
             runTarget.AddChild(new HasTargetNode(() => targetProxy.Target));
-            runTarget.AddChild(new LookAtTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            runTarget.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
             runTarget.AddChild(new MoveToTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
             runTarget.AddChild(new IsDashAvailableNode());
-            runTarget.AddChild(new IsPlayerActive(() => targetProxy.Target?.IsActive ?? false));
+            runTarget.AddChild(new IsPlayerActiveNode(() => targetProxy.Target?.IsActive ?? false));
             runTarget.AddChild(new DashToNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
 
             root.AddChild(runTarget);
@@ -125,9 +129,29 @@ namespace EJARQUE
             targetProxy.Target = SelectTarget(utils, myPlayerInfos);
             targetedBonusProxy.Bonus = SelectBonus(utils, myPlayerInfos);
 
+            if (targetProxy.Target != null)
+            {
+                // Mettre à jour les positions précédente et actuelle de la cible
+                previousTargetPosition = currentTargetPosition;
+                currentTargetPosition = targetProxy.Target.Transform.Position;
+            }
+
             root.Execute(myPlayerInfos, actionList);
 
             return actionList;
+        }
+
+        // Méthode pour calculer la position anticipée de la cible
+        private Vector3 AnticipateTargetPosition()
+        {
+            if (targetProxy.Target == null) return Vector3.zero;
+
+            // Calcul de la vitesse et de la direction de la cible
+            Vector3 targetVelocity = (currentTargetPosition - previousTargetPosition) / Time.deltaTime;
+
+            // Prédire la position future de la cible
+            float predictionTime = Vector3.Distance(myPlayerInfos.Transform.Position, currentTargetPosition) / 10.0f; // 10.0f est une estimation de la vitesse de la balle
+            return currentTargetPosition + targetVelocity * predictionTime;
         }
     }
 }

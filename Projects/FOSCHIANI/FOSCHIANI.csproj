@@ -134,8 +134,14 @@
       <HintPath>..\..\..\RedLock\Red Lock_Data\Managed\AI_BehaviorTree_AIGameUtility.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\Unity\2022.3.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\UnityEditor\2022.3.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonAPI\CommonAPI.csproj">
+      <Project>{bb62e10b-02a8-4a4f-8c3b-fff10aaeb4b7}</Project>
+      <Name>CommonAPI</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

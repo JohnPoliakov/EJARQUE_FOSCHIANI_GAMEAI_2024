@@ -3,12 +3,12 @@ using System;
 
 namespace CommonAPI.Actions
 {
-    public class IsPlayerActive : ConditionNode
+    public class IsPlayerActiveNode : ConditionNode
     {
 
         private Func<bool> _isPlayerActive;
 
-        public IsPlayerActive(Func<bool> isPlayerActive)
+        public IsPlayerActiveNode(Func<bool> isPlayerActive)
         {
             _isPlayerActive = isPlayerActive;
         }

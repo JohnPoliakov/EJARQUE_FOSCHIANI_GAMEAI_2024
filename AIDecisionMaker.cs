@@ -1,7 +1,6 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using System.Collections.Generic;
 using EJARQUE;
-using FOSCHIANI;
 using UnityEngine.Assertions;
 
 namespace AI_BehaviorTree_AIImplementation
@@ -16,13 +15,13 @@ namespace AI_BehaviorTree_AIImplementation
         /// </summary>
         private int AIId = -1;
         public GameWorldUtils AIGameWorldUtils = new GameWorldUtils();
-        RATIO ratio = new RATIO();
+        Skynet skynet = new Skynet();
 
         // Ne pas utiliser cette fonction, elle n'est utile que pour le jeu qui vous Set votre Id, si vous voulez votre Id utilisez AIId
         public void SetAIId(int parAIId) { AIId = parAIId; }
 
         // Vous pouvez modifier le contenu de cette fonction pour modifier votre nom en jeu
-        public string GetName() { return "Ratio"; }
+        public string GetName() { return "Skynet"; }
 
         public void SetAIGameWorldUtils(GameWorldUtils parGameWorldUtils) { AIGameWorldUtils = parGameWorldUtils; }
 
@@ -36,7 +35,7 @@ namespace AI_BehaviorTree_AIImplementation
         public List<AIAction> ComputeAIDecision()
         {
 
-            return ratio.ComputeAIDecision(AIId, AIGameWorldUtils);
+            return skynet.ComputeAIDecision(AIId, AIGameWorldUtils);
            
            
         }
