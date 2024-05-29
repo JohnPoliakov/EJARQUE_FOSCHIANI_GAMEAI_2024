@@ -1,15 +1,14 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using System.Collections.Generic;
-using Windows.Services.Maps;
 
 namespace CommonAPI
 {
     // Class that revert the expected result
     public class InverterNode : ActionNode
     {
-        private ActionNode child;
+        private ConditionNode child;
 
-        public InverterNode(ActionNode child)
+        public InverterNode(ConditionNode child)
         {
             this.child = child;
         }

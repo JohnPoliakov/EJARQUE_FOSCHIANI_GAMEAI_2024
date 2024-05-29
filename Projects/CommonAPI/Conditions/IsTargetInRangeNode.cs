@@ -1,23 +1,23 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace CommonAPI.Conditions
 {
     public class IsTargetInRangeNode : ConditionNode
     {
-        private PlayerInformations target;
+        private Func<Vector3> target;
         private float range;
 
-        public IsTargetInRangeNode(PlayerInformations target, float range)
+        public IsTargetInRangeNode(Func<Vector3> target,float range)
         {
-            this.target = target;
             this.range = range;
+            this.target = target;
         }
 
         public override bool Evaluate(PlayerInformations playerInfo)
         {
-            return Vector3.Distance(playerInfo.Transform.Position, target.Transform.Position) <= range;
+            return Vector3.Distance(playerInfo.Transform.Position, target.Invoke()) <= range;
         }
 
     }

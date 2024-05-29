@@ -1,16 +1,16 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using System.Collections.Generic;
-using UnityEngine;
+using System;
 
 namespace CommonAPI.Conditions
 {
     public class IsInDangerNode : ConditionNode
     {
 
-        private GameWorldUtils utils;
+        private Func<GameWorldUtils> utils;
         private float range;
 
-        public IsInDangerNode(GameWorldUtils utils, float range)
+        public IsInDangerNode(Func<GameWorldUtils> utils, float range)
         {
             this.utils = utils;
             this.range = range;
@@ -20,7 +20,7 @@ namespace CommonAPI.Conditions
         {
 
             float health = playerInfo.CurrentHealth / playerInfo.MaxHealth;
-            bool isLow = health <= 0.5f || GetProjectiles(utils, playerInfo).Count > 0;
+            bool isLow = health <= 0.5f || GetProjectiles(utils.Invoke(), playerInfo).Count > 0;
 
             return isLow;
         }
@@ -31,7 +31,7 @@ namespace CommonAPI.Conditions
 
             foreach(ProjectileInformations projInfo in utils.GetProjectileInfosList())
             {
-                if(playerInfo.PlayerId != projInfo.PlayerId && Vector3.Distance(projInfo.Transform.Position, playerInfo.Transform.Position) <= range)
+                if(playerInfo.PlayerId != projInfo.PlayerId)
                     projectiles.Add(projInfo);
             }
 

@@ -29,7 +29,6 @@ namespace CommonAPI.Actions
         private Vector3 ComputeDirection(PlayerInformations playerInfo)
         {
             Vector3 positionJoueur = playerInfo.Transform.Position;
-            Vector3 directionFuite = Vector3.zero;
             List<ProjectileInformations> projectiles = GetProjectiles(utils, playerInfo);
 
             if (projectiles.Count == 0)
@@ -42,30 +41,39 @@ namespace CommonAPI.Actions
             for (int angle = 0; angle < 360; angle += 10) // Parcours des angles à 10° d'intervalle
             {
                 Vector3 potentielDirection = Quaternion.Euler(0, angle, 0) * Vector3.forward;
-                float score = 0;
-
-                foreach (ProjectileInformations projectile in projectiles)
+                if (BestDirection(positionJoueur, potentielDirection, 5))
                 {
-                    Vector3 toProjectile = projectile.Transform.Position - positionJoueur;
-                    float distance = toProjectile.magnitude;
-                    float dotProduct = Vector3.Dot(potentielDirection, toProjectile.normalized);
-
-                    // Si le dot product est négatif, le projectile est derrière, ce qui est bon pour nous
-                    if (dotProduct < 0)
+                    float score = 0;
+                    foreach (ProjectileInformations projectile in projectiles)
                     {
-                        score += distance / (distance + 1); // +1 pour éviter division par zéro
-                    }
-                }
+                        Vector3 toProjectile = projectile.Transform.Position - positionJoueur;
+                        float distance = toProjectile.magnitude;
+                        float dotProduct = Vector3.Dot(potentielDirection, toProjectile.normalized);
 
-                if (score > meilleurScore)
-                {
-                    meilleurScore = score;
-                    meilleureDirection = potentielDirection;
+                        // Si le dot product est négatif, le projectile est derrière, ce qui est bon pour nous
+                        if (dotProduct < 0)
+                        {
+                            score += distance / (distance + 1); // +1 pour éviter division par zéro
+                        }
+                    }
+
+                    if (score > meilleurScore)
+                    {
+                        meilleurScore = score;
+                        meilleureDirection = potentielDirection;
+                    }
                 }
             }
 
             return meilleureDirection.normalized;
         }
+
+        private bool BestDirection(Vector3 origine, Vector3 direction, float distance)
+        {
+            Ray ray = new Ray(origine, direction);
+            return !Physics.Raycast(ray, distance);
+        }
+
 
         public List<ProjectileInformations> GetProjectiles(GameWorldUtils utils, PlayerInformations playerInfo)
         {
@@ -74,7 +82,7 @@ namespace CommonAPI.Actions
 
             foreach (ProjectileInformations projInfo in utils.GetProjectileInfosList())
             {
-                if (playerInfo.PlayerId != projInfo.PlayerId && Vector3.Distance(projInfo.Transform.Position, playerInfo.Transform.Position) <= range)
+                if (playerInfo.PlayerId != projInfo.PlayerId)
                     projectiles.Add(projInfo);
             }
 

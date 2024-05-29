@@ -1,72 +1,76 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
-using System.Collections.Generic;
-using CommonAPI.TreeBehaviour;
 using CommonAPI.Actions;
-using UnityEngine.Assertions;
 using CommonAPI.Conditions;
+using CommonAPI.TreeBehaviour;
+using CommonAPI;
+using System.Collections.Generic;
+using UnityEngine.Assertions;
 using UnityEngine;
 
 namespace EJARQUE
 {
+    public class TargetProxy
+    {
+        public PlayerInformations Target { get; set; }
+    }
+
+    public class BonusProxy
+    {
+        public BonusInformations Bonus { get; set; }
+    }
+
+
     public class Skynet
     {
+        BonusProxy targetedBonusProxy = new BonusProxy();
+        TargetProxy targetProxy = new TargetProxy();
+        PlayerInformations myPlayerInfos;
+        SelectorNode root;
 
-        TargetData TargetData { get; set; }
-        bool searchBonus;
-        BonusInformations targetedBonus;
-
-        public List<AIAction> ComputeAIDecision(int myID, GameWorldUtils utils)
+        public Skynet()
         {
-            List<AIAction> actionList = new List<AIAction>();
-            PlayerInformations myPlayerInfos = GetPlayerInfos(myID, utils.GetPlayerInfosList());
+            root = new SelectorNode();
 
-            PlayerInformations target = SelectTarget(utils, myPlayerInfos);
+            SequenceNode runBonus = new SequenceNode();
+            runBonus.AddChild(new IsSeekingBonusNode(() => targetedBonusProxy.Bonus));
+            runBonus.AddChild(new MoveToTargetNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero));
+            runBonus.AddChild(new IsDashAvailableNode());
+            runBonus.AddChild(new InverterNode(new IsTargetInRangeNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero, 1)));
+            runBonus.AddChild(new DashToNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero));
+            runBonus.AddChild(new HasTargetNode(() => targetProxy.Target));
+            runBonus.AddChild(new LookAtTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            runBonus.AddChild(new FireAtTargetNode());
 
-            if (target == null)
-                return actionList;
+            root.AddChild(runBonus);
 
-            SelectorNode root = new SelectorNode();
+            SequenceNode runTarget = new SequenceNode();
+            runTarget.AddChild(new HasTargetNode(() => targetProxy.Target));
+            runTarget.AddChild(new LookAtTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            runTarget.AddChild(new MoveToTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            runTarget.AddChild(new IsDashAvailableNode());
+            runTarget.AddChild(new IsPlayerActive(() => targetProxy.Target?.IsActive ?? false));
+            runTarget.AddChild(new DashToNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
 
-            SequenceNode attackSequence = new SequenceNode();
-            attackSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
-            //attackSequence.AddChild(new AnticipateTarget(target, TargetData.informations));
-            attackSequence.AddChild(new FireAtTargetNode());
-            UpdateTargetData(target);
+            root.AddChild(runTarget);
+        }
 
-            SequenceNode moveToTargetSequence = new SequenceNode();
-            moveToTargetSequence.AddChild(new LookAtTargetNode(target.Transform.Position));
-            if(searchBonus)
-                moveToTargetSequence.AddChild(new MoveToTargetNode(targetedBonus.Position));
-            else
-                moveToTargetSequence.AddChild(new MoveToTargetNode(target.Transform.Position));
+        private BonusInformations SelectBonus(GameWorldUtils utils, PlayerInformations myPlayerInfos)
+        {
+            BonusInformations bonus = null;
+            float targetDistance = float.MaxValue;
 
-            // Dash if is danger
-            SequenceNode dashWhenLow = new SequenceNode();
-            dashWhenLow.AddChild(new IsDashAvailableNode());
-            dashWhenLow.AddChild(new IsInDangerNode(utils, 6));
-            dashWhenLow.AddChild(new DashNode(utils, 6));
+            foreach (BonusInformations bonusInfo in utils.GetBonusInfosList())
+            {
+                float distance = Vector3.Distance(myPlayerInfos.Transform.Position, bonusInfo.Position);
 
+                if (distance < targetDistance)
+                {
+                    bonus = bonusInfo;
+                    targetDistance = distance;
+                }
+            }
 
-            // Move to target if not in range
-            SequenceNode moveToTargetConditionSequence = new SequenceNode();
-            moveToTargetConditionSequence.AddChild(new IsTargetInRangeNode(target, 6.0f));
-            moveToTargetConditionSequence.AddChild(moveToTargetSequence);
-            //moveToTargetConditionSequence.AddChild(isDashAvailable);
-            //moveToTargetConditionSequence.AddChild(new DashNode(target));
-
-           
-
-            // Compile Move and Shoot
-            SequenceNode moveAttack = new SequenceNode();
-            moveAttack.AddChild(attackSequence);
-            moveAttack.AddChild(moveToTargetConditionSequence);
-            //moveAttack.AddChild(dashWhenLow);
-
-            root.AddChild(moveAttack);
-
-            root.Execute(target, actionList);
-
-            return actionList;
+            return bonus;
         }
 
         private PlayerInformations SelectTarget(GameWorldUtils utils, PlayerInformations myPlayerInfos)
@@ -74,26 +78,6 @@ namespace EJARQUE
             PlayerInformations targetData = null;
             float targetDistance = float.MaxValue;
             float targetHealth = float.MaxValue;
-
-            searchBonus = false;
-
-            if(utils.GetBonusInfosList().Count > 0)
-            {
-
-                foreach (BonusInformations bonusInfo in utils.GetBonusInfosList())
-                {
-                    if (myPlayerInfos.CurrentHealth <= 0.7f && Vector3.Distance(myPlayerInfos.Transform.Position, bonusInfo.Position) < 5)
-                    {
-                        searchBonus = true;
-                        targetedBonus = bonusInfo;
-                        break;
-                    }
-                }
-
-            }
-
-            
-
 
             foreach (PlayerInformations playerInfo in utils.GetPlayerInfosList())
             {
@@ -111,25 +95,14 @@ namespace EJARQUE
                     targetDistance = distanceFromTarget;
                 }
 
-                if(targetHealth > playerInfo.CurrentHealth && distanceFromTarget <= 5)
+                if (targetHealth > playerInfo.CurrentHealth && distanceFromTarget <= 5)
                 {
                     targetHealth = playerInfo.CurrentHealth;
                     targetData = playerInfo;
                 }
-
-            }
-
-            if(targetData != null && (TargetData == null || TargetData.informations.PlayerId != targetData.PlayerId))
-            {
-                UpdateTargetData(targetData);
             }
 
             return targetData;
-        }
-
-        private void UpdateTargetData(PlayerInformations informations)
-        {
-            TargetData = new TargetData(informations);
         }
 
         public PlayerInformations GetPlayerInfos(int parPlayerId, List<PlayerInformations> parPlayerInfosList)
@@ -143,7 +116,18 @@ namespace EJARQUE
             Assert.IsTrue(false, "GetPlayerInfos : PlayerId not Found");
             return null;
         }
+
+        public List<AIAction> ComputeAIDecision(int myID, GameWorldUtils utils)
+        {
+            List<AIAction> actionList = new List<AIAction>();
+            myPlayerInfos = GetPlayerInfos(myID, utils.GetPlayerInfosList());
+
+            targetProxy.Target = SelectTarget(utils, myPlayerInfos);
+            targetedBonusProxy.Bonus = SelectBonus(utils, myPlayerInfos);
+
+            root.Execute(myPlayerInfos, actionList);
+
+            return actionList;
+        }
     }
-
-
 }

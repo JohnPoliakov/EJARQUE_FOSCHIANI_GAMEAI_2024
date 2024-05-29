@@ -121,9 +121,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActionNode.cs" />
-    <Compile Include="Actions\AnticipateTarget.cs" />
+    <Compile Include="Conditions\HasTargetNode.cs" />
+    <Compile Include="Conditions\IsSeekingBonusNode.cs" />
+    <Compile Include="Conditions\IsPlayerActive.cs" />
+    <Compile Include="Actions\DashToNode.cs" />
     <Compile Include="Actions\DashNode.cs" />
     <Compile Include="Actions\FireAtTargetNode.cs" />
+    <Compile Include="Actions\MoveDodgeToTargetNode.cs" />
     <Compile Include="Actions\StopMovementNode.cs" />
     <Compile Include="Actions\MoveToTargetNode.cs" />
     <Compile Include="Actions\LookAtTargetNode.cs" />
