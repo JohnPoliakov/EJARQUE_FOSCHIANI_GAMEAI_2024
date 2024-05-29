@@ -1,16 +1,14 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
+using UnityEngine;
 using CommonAPI.TreeBehaviour;
 using CommonAPI.Actions;
-using UnityEngine.Assertions;
 using CommonAPI.Conditions;
-using CommonAPI;
-using System;
-using UnityEngine;
 
 namespace FOSCHIANI
 {
-    public class RATIO
+    public class Nimbus2000
     {
         private Dictionary<int, Vector3> previousPositions = new Dictionary<int, Vector3>();
 
@@ -32,54 +30,33 @@ namespace FOSCHIANI
 
             Vector3 predictedPosition = target != null ? PredictTargetPosition(target) : Vector3.zero;
 
-            SelectorNode root = new SelectorNode();
+            SequenceNode root = new SequenceNode();
 
-            // Always look at the predicted position if a target exists
-            SequenceNode lookAtSequence = new SequenceNode();
-            lookAtSequence.AddChild(new LookAtTargetNode(predictedPosition));
+            SequenceNode attackSequence = new SequenceNode();
+            SequenceNode dashSequence = new SequenceNode();
 
-            // If there's a target, attack it
-            if (target != null)
-            {
-                SequenceNode attackSequence = new SequenceNode();
-                attackSequence.AddChild(lookAtSequence);
-                attackSequence.AddChild(new FireAtTargetNode());
-                root.AddChild(attackSequence);
-            }
-
-            // If there's a bonus, move towards it
             if (targetBonus != null)
             {
-                SequenceNode moveToBonusSequence = new SequenceNode();
-                moveToBonusSequence.AddChild(new LookAtTargetNode(targetBonus.Position));
-                moveToBonusSequence.AddChild(new MoveToTargetNode(targetBonus.Position));
-
-                // Dash to reach the bonus faster
-                SequenceNode dashToBonusSequence = new SequenceNode();
-                dashToBonusSequence.AddChild(new IsDashAvailableNode());
-                dashToBonusSequence.AddChild(new DashNodeLouis(utils, targetBonus.Position, 15));
-
-                root.AddChild(dashToBonusSequence);
-                root.AddChild(moveToBonusSequence);
+                attackSequence.AddChild(new LookAtTargetNode(predictedPosition));
+                attackSequence.AddChild(new FireAtTargetNode());
+                attackSequence.AddChild(new MoveToTargetNode(targetBonus.Position));
             }
-            else if (target != null) // If no bonus, move towards the target
+            else if (target != null && targetBonus == null)
             {
-                SequenceNode moveToTargetSequence = new SequenceNode();
-                moveToTargetSequence.AddChild(lookAtSequence);
-                moveToTargetSequence.AddChild(new MoveToTargetNode(predictedPosition));
-
-                // Dash if possible
-                SequenceNode dashToTargetSequence = new SequenceNode();
-                dashToTargetSequence.AddChild(new IsDashAvailableNode());
-                dashToTargetSequence.AddChild(new DashNodeLouis(utils, predictedPosition, 15));
-
-                root.AddChild(dashToTargetSequence);
-                root.AddChild(moveToTargetSequence);
+                attackSequence.AddChild(new LookAtTargetNode(predictedPosition));
+                attackSequence.AddChild(new FireAtTargetNode());
+                attackSequence.AddChild(new MoveToTargetNode(target.Transform.Position));
             }
+            root.AddChild(attackSequence);
+
+            dashSequence.AddChild(new IsDashAvailableNode());
+            dashSequence.AddChild(new DashNodeLouis(utils, targetBonus != null ? targetBonus.Position : (target != null && targetBonus == null ? target.Transform.Position : Vector3.zero), 15));
+            //dashSequence.AddChild(new DashNodeLouis(utils, targetBonus.Position, 15));
+
+            root.AddChild(dashSequence);
 
             // Execute the root node with the correct context
-            if (target != null) root.Execute(target, actionList);
-            else root.Execute(targetBonus, actionList);
+            root.Execute(target, actionList);
 
             if (target != null)
             {
