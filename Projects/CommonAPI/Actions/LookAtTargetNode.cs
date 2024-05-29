@@ -16,7 +16,7 @@ namespace CommonAPI.Actions
 
         public override bool Execute(PlayerInformations playerInfo, List<AIAction> actionList)
         {
-            actionList.Add(new AIActionLookAtPosition(targetPosition.Invoke() + new Vector3(0, 0.35f, 0)));
+            actionList.Add(new AIActionLookAtPosition(targetPosition.Invoke() + new Vector3(0, 0.2f, 0)));
             return true; // Success
         }
     }

@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="ActionNode.cs" />
     <Compile Include="Conditions\HasTargetNode.cs" />
+    <Compile Include="Conditions\IsPlayerlmmortalNode.cs" />
     <Compile Include="Conditions\IsSeekingBonusNode.cs" />
     <Compile Include="Conditions\IsPlayerActiveNode.cs" />
     <Compile Include="Actions\DashToNode.cs" />

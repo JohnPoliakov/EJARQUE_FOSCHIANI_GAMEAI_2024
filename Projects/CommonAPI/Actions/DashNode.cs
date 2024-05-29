@@ -1,5 +1,6 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 namespace CommonAPI.Actions
@@ -7,13 +8,11 @@ namespace CommonAPI.Actions
     public class DashNode : ActionNode
     {
 
-        private GameWorldUtils utils;
-        private float range;
+        private Func<GameWorldUtils> utils;
 
-        public DashNode(GameWorldUtils utils, float range)
+        public DashNode(Func<GameWorldUtils> utils)
         {
             this.utils = utils;
-            this.range = range;
         }
 
         public override bool Execute(PlayerInformations playerInfo, List<AIAction> actionList)
@@ -21,7 +20,8 @@ namespace CommonAPI.Actions
 
             Vector3 direction = ComputeDirection(playerInfo);
 
-            actionList.Add(new AIActionDash(direction));
+            if(direction != Vector3.zero)
+                actionList.Add(new AIActionDash(direction));
             return true; // Success
         }
 
@@ -29,64 +29,35 @@ namespace CommonAPI.Actions
         private Vector3 ComputeDirection(PlayerInformations playerInfo)
         {
             Vector3 positionJoueur = playerInfo.Transform.Position;
-            List<ProjectileInformations> projectiles = GetProjectiles(utils, playerInfo);
+            ProjectileInformations projectile = GetProjectile(utils.Invoke(), playerInfo);
 
-            if (projectiles.Count == 0)
-                return Vector3.forward; // Retourne une direction par défaut si aucun projectile n'est détecté
+            if (projectile == null)
+                return Vector3.zero; // Retourne une direction par défaut si aucun projectile n'est détecté
 
-            // Calculer la direction optimale pour esquiver les projectiles
-            float meilleurScore = float.MinValue;
-            Vector3 meilleureDirection = Vector3.zero;
+            Vector3 directionFromProjToPlayer = projectile.Transform.Position - positionJoueur;
 
-            for (int angle = 0; angle < 360; angle += 10) // Parcours des angles à 10° d'intervalle
-            {
-                Vector3 potentielDirection = Quaternion.Euler(0, angle, 0) * Vector3.forward;
-                if (BestDirection(positionJoueur, potentielDirection, 5))
-                {
-                    float score = 0;
-                    foreach (ProjectileInformations projectile in projectiles)
-                    {
-                        Vector3 toProjectile = projectile.Transform.Position - positionJoueur;
-                        float distance = toProjectile.magnitude;
-                        float dotProduct = Vector3.Dot(potentielDirection, toProjectile.normalized);
-
-                        // Si le dot product est négatif, le projectile est derrière, ce qui est bon pour nous
-                        if (dotProduct < 0)
-                        {
-                            score += distance / (distance + 1); // +1 pour éviter division par zéro
-                        }
-                    }
-
-                    if (score > meilleurScore)
-                    {
-                        meilleurScore = score;
-                        meilleureDirection = potentielDirection;
-                    }
-                }
-            }
-
-            return meilleureDirection.normalized;
-        }
-
-        private bool BestDirection(Vector3 origine, Vector3 direction, float distance)
-        {
-            Ray ray = new Ray(origine, direction);
-            return !Physics.Raycast(ray, distance);
+            return Vector3.Cross(directionFromProjToPlayer.normalized, Vector3.up).normalized;
         }
 
 
-        public List<ProjectileInformations> GetProjectiles(GameWorldUtils utils, PlayerInformations playerInfo)
+        public ProjectileInformations GetProjectile(GameWorldUtils utils, PlayerInformations playerInfo)
         {
 
-            List<ProjectileInformations> projectiles = new List<ProjectileInformations>();
+            ProjectileInformations projectile = null;
+            float distance = Mathf.Infinity;
 
             foreach (ProjectileInformations projInfo in utils.GetProjectileInfosList())
             {
-                if (playerInfo.PlayerId != projInfo.PlayerId)
-                    projectiles.Add(projInfo);
+                float dist = Vector3.Distance(projInfo.Transform.Position, playerInfo.Transform.Position);
+
+                if (playerInfo.PlayerId != projInfo.PlayerId && dist < distance)
+                {
+                    distance = dist;
+                    projectile = projInfo;
+                }
             }
 
-            return projectiles;
+            return projectile;
         }
     }
 }

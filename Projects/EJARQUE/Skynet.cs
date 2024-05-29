@@ -6,6 +6,7 @@ using CommonAPI;
 using System.Collections.Generic;
 using UnityEngine.Assertions;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace EJARQUE
 {
@@ -19,43 +20,57 @@ namespace EJARQUE
         public BonusInformations Bonus { get; set; }
     }
 
+    public class WorldProxy
+    {
+        public GameWorldUtils PreviousWorld { get; set; }
+        public GameWorldUtils CurrentWorld { get; set; }
+    }
+
 
     public class Skynet
     {
         BonusProxy targetedBonusProxy = new BonusProxy();
         TargetProxy targetProxy = new TargetProxy();
+        WorldProxy worldProxy = new WorldProxy();
         PlayerInformations myPlayerInfos;
         SelectorNode root;
-
-        // Positions précédentes et actuelle pour calculer la vitesse de la cible
-        Vector3 previousTargetPosition;
-        Vector3 currentTargetPosition;
 
         public Skynet()
         {
             root = new SelectorNode();
 
-            SequenceNode runBonus = new SequenceNode();
-            runBonus.AddChild(new IsSeekingBonusNode(() => targetedBonusProxy.Bonus));
-            runBonus.AddChild(new MoveToTargetNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero));
-            runBonus.AddChild(new IsDashAvailableNode());
-            runBonus.AddChild(new InverterNode(new IsTargetInRangeNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero, 1)));
-            runBonus.AddChild(new DashToNode(() => targetedBonusProxy.Bonus?.Position ?? Vector3.zero));
-            runBonus.AddChild(new HasTargetNode(() => targetProxy.Target));
-            runBonus.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
-            runBonus.AddChild(new FireAtTargetNode());
 
-            root.AddChild(runBonus);
+            SequenceNode dash = new SequenceNode();
+            dash.AddChild(new IsDashAvailableNode());
+            dash.AddChild(new DashNode(()=> worldProxy.CurrentWorld));
 
-            SequenceNode runTarget = new SequenceNode();
-            runTarget.AddChild(new HasTargetNode(() => targetProxy.Target));
-            runTarget.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
-            runTarget.AddChild(new MoveToTargetNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
-            runTarget.AddChild(new IsDashAvailableNode());
-            runTarget.AddChild(new IsPlayerActiveNode(() => targetProxy.Target?.IsActive ?? false));
-            runTarget.AddChild(new DashToNode(() => targetProxy.Target?.Transform.Position ?? Vector3.zero));
+            SequenceNode runBonusAndShoot = new SequenceNode();
+            runBonusAndShoot.AddChild(new HasTargetNode(() => targetProxy.Target));
+            runBonusAndShoot.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
+            runBonusAndShoot.AddChild(new FireAtTargetNode(() => targetProxy.Target));
+            runBonusAndShoot.AddChild(new IsSeekingBonusNode(() => targetedBonusProxy.Bonus));
+            runBonusAndShoot.AddChild(new MoveToTargetNode(() => targetedBonusProxy.Bonus?.Position ?? myPlayerInfos.Transform.Position));
 
-            root.AddChild(runTarget);
+            SequenceNode runTargetAndShoot = new SequenceNode();
+            runTargetAndShoot.AddChild(new HasTargetNode(() => targetProxy.Target));
+            runTargetAndShoot.AddChild(new LookAtTargetNode(() => AnticipateTargetPosition()));
+            runTargetAndShoot.AddChild(new FireAtTargetNode(() => targetProxy.Target));
+            runTargetAndShoot.AddChild(new InverterNode(new IsTargetInRangeNode(() => targetProxy.Target.Transform.Position, 4)));
+            runTargetAndShoot.AddChild(new MoveToTargetNode(() => targetProxy.Target?.Transform.Position ?? myPlayerInfos.Transform.Position));
+
+            SequenceNode seekBonus = new SequenceNode();
+            seekBonus.AddChild(new IsSeekingBonusNode(() => targetedBonusProxy.Bonus));
+            seekBonus.AddChild(new MoveToTargetNode(() => targetedBonusProxy.Bonus?.Position ?? myPlayerInfos.Transform.Position));
+
+            SequenceNode stop = new SequenceNode();
+            stop.AddChild(new StopMovementNode());
+
+            root.AddChild(dash);
+            root.AddChild(runBonusAndShoot);
+            root.AddChild(runTargetAndShoot);
+            root.AddChild(seekBonus);
+            root.AddChild(stop);
+
         }
 
         private BonusInformations SelectBonus(GameWorldUtils utils, PlayerInformations myPlayerInfos)
@@ -129,12 +144,8 @@ namespace EJARQUE
             targetProxy.Target = SelectTarget(utils, myPlayerInfos);
             targetedBonusProxy.Bonus = SelectBonus(utils, myPlayerInfos);
 
-            if (targetProxy.Target != null)
-            {
-                // Mettre à jour les positions précédente et actuelle de la cible
-                previousTargetPosition = currentTargetPosition;
-                currentTargetPosition = targetProxy.Target.Transform.Position;
-            }
+            worldProxy.PreviousWorld = worldProxy.CurrentWorld;
+            worldProxy.CurrentWorld = utils;
 
             root.Execute(myPlayerInfos, actionList);
 
@@ -144,14 +155,33 @@ namespace EJARQUE
         // Méthode pour calculer la position anticipée de la cible
         private Vector3 AnticipateTargetPosition()
         {
-            if (targetProxy.Target == null) return Vector3.zero;
+            if (targetProxy.Target == null || worldProxy.PreviousWorld == null) return myPlayerInfos.Transform.Position;
 
-            // Calcul de la vitesse et de la direction de la cible
-            Vector3 targetVelocity = (currentTargetPosition - previousTargetPosition) / Time.deltaTime;
+            PlayerInformations previousTargerData = null;
 
-            // Prédire la position future de la cible
-            float predictionTime = Vector3.Distance(myPlayerInfos.Transform.Position, currentTargetPosition) / 10.0f; // 10.0f est une estimation de la vitesse de la balle
-            return currentTargetPosition + targetVelocity * predictionTime;
+            foreach(PlayerInformations previousPlayerData in worldProxy.PreviousWorld.GetPlayerInfosList()){
+                if(previousPlayerData.PlayerId == targetProxy.Target.PlayerId)
+                {
+                    previousTargerData = previousPlayerData;
+                    break;
+                }
+            }
+
+            if (previousTargerData == null) return targetProxy.Target.Transform.Position;
+
+            Vector3 currentPosition = targetProxy.Target.Transform.Position;
+            Vector3 previousPosition = previousTargerData.Transform.Position;
+            Vector3 direction = (currentPosition - previousPosition).normalized;
+
+
+            Vector3 guessedPosition = currentPosition + direction * Vector3.Distance(currentPosition, myPlayerInfos.Transform.Position) * 0.005f;
+
+            if (Mathf.Abs(guessedPosition.y - currentPosition.y) > 1.0f)
+            {
+                guessedPosition.y = currentPosition.y;
+            }
+
+            return guessedPosition;
         }
     }
 }

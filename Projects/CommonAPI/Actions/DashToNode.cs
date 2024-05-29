@@ -19,8 +19,8 @@ namespace CommonAPI.Actions
         {
 
             Vector3 direction = ComputeDirection(playerInfo);
-
-            actionList.Add(new AIActionDash(direction));
+            if(HasSpace(playerInfo.Transform.Position, direction, 3))
+                actionList.Add(new AIActionDash(direction));
             return true; // Success
         }
 
@@ -32,6 +32,12 @@ namespace CommonAPI.Actions
             return (to.Invoke()-positionJoueur).normalized;
         }
 
-    
+        private bool HasSpace(Vector3 origine, Vector3 direction, float distance)
+        {
+            Ray ray = new Ray(origine, direction);
+            return !Physics.Raycast(ray, distance);
+        }
+
+
     }
 }
