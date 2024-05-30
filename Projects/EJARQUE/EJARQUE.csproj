@@ -140,7 +140,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonAPI\CommonAPI.csproj">
+
       <Project>{bb62e10b-02a8-4a4f-8c3b-fff10aaeb4b7}</Project>
+
       <Name>CommonAPI</Name>
     </ProjectReference>
   </ItemGroup>

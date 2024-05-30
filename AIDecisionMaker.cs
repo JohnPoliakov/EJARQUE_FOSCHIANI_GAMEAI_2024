@@ -1,6 +1,7 @@
 ﻿using AI_BehaviorTree_AIGameUtility;
 using System.Collections.Generic;
-using EJARQUE;
+
+using FOSCHIANI;
 using UnityEngine.Assertions;
 
 namespace AI_BehaviorTree_AIImplementation
@@ -15,13 +16,14 @@ namespace AI_BehaviorTree_AIImplementation
         /// </summary>
         private int AIId = -1;
         public GameWorldUtils AIGameWorldUtils = new GameWorldUtils();
-        Skynet skynet = new Skynet();
+
+        Nimbus2000 Nimbus2000 = new Nimbus2000();
 
         // Ne pas utiliser cette fonction, elle n'est utile que pour le jeu qui vous Set votre Id, si vous voulez votre Id utilisez AIId
         public void SetAIId(int parAIId) { AIId = parAIId; }
 
-        // Vous pouvez modifier le contenu de cette fonction pour modifier votre nom en jeu
-        public string GetName() { return "Skynet"; }
+
+        public string GetName() { return "Nimbus 2000"; }
 
         public void SetAIGameWorldUtils(GameWorldUtils parGameWorldUtils) { AIGameWorldUtils = parGameWorldUtils; }
 
@@ -35,8 +37,8 @@ namespace AI_BehaviorTree_AIImplementation
         public List<AIAction> ComputeAIDecision()
         {
 
-            return skynet.ComputeAIDecision(AIId, AIGameWorldUtils);
-           
+            return Nimbus2000.ComputeAIDecision(AIId, AIGameWorldUtils);
+
            
         }
 
