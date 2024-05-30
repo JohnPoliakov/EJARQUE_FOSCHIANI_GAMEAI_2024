@@ -61,6 +61,13 @@ namespace EJARQUE
             SequenceNode seekBonus = new SequenceNode();
             seekBonus.AddChild(new IsSeekingBonusNode(() => targetedBonusProxy.Bonus));
             seekBonus.AddChild(new MoveToTargetNode(() => targetedBonusProxy.Bonus?.Position ?? myPlayerInfos.Transform.Position));
+            
+            SequenceNode dashRandom = new SequenceNode();
+            dashRandom.AddChild(new IsDashAvailableNode());
+            dashRandom.AddChild(new DashToNode(() => GetRandomDirection(myPlayerInfos)));
+            
+            SequenceNode moveRandom = new SequenceNode();
+            moveRandom.AddChild(new MoveToTargetNode(() => GetRandomDirection(myPlayerInfos)));
 
             SequenceNode stop = new SequenceNode();
             stop.AddChild(new StopMovementNode());
@@ -69,8 +76,18 @@ namespace EJARQUE
             root.AddChild(runBonusAndShoot);
             root.AddChild(runTargetAndShoot);
             root.AddChild(seekBonus);
+            root.AddChild(dashRandom);
+            root.AddChild(moveRandom);
             root.AddChild(stop);
 
+        }
+
+        private Vector3 GetRandomDirection(PlayerInformations playerInfo)
+        {
+            float num = Random.Range(-1f, 1f);
+            float num2 = Random.Range(-1f, 1f);
+            Vector3 normalized = new Vector3(num, 0f, num2).normalized;
+            return playerInfo.Transform.Position + normalized * 5f;
         }
 
         private BonusInformations SelectBonus(GameWorldUtils utils, PlayerInformations myPlayerInfos)
@@ -104,6 +121,9 @@ namespace EJARQUE
                     continue;
 
                 if (playerInfo.PlayerId == myPlayerInfos.PlayerId)
+                    continue;
+
+                if (utils.GetPlayerInfosList().Count > 2 && playerInfo.BonusOnPlayer[EBonusType.Invulnerability] >= 0)
                     continue;
 
                 float distanceFromTarget = Vector3.Distance(myPlayerInfos.Transform.Position, playerInfo.Transform.Position);
@@ -172,16 +192,26 @@ namespace EJARQUE
             Vector3 currentPosition = targetProxy.Target.Transform.Position;
             Vector3 previousPosition = previousTargerData.Transform.Position;
             Vector3 direction = (currentPosition - previousPosition).normalized;
+            Vector3 targetVelocity = (currentPosition - previousPosition) / Time.deltaTime;
 
+            float estimatedTimeOfFlight = 0.05f;
 
-            Vector3 guessedPosition = currentPosition + direction * Vector3.Distance(currentPosition, myPlayerInfos.Transform.Position) * 0.005f;
+            Vector3 predictedPosition = currentPosition + targetVelocity * estimatedTimeOfFlight;
 
-            if (Mathf.Abs(guessedPosition.y - currentPosition.y) > 1.0f)
+            if (Mathf.Abs(predictedPosition.y - currentPosition.y) > 1.0f)
             {
-                guessedPosition.y = currentPosition.y;
+                predictedPosition.y = currentPosition.y;
             }
 
-            return guessedPosition;
+            // Limiter les mouvements horizontaux excessifs
+            float maxVerticalDistance = 1.0f; // Ajustez cette valeur selon votre jeu
+            if (Vector3.Distance(currentPosition, predictedPosition) > maxVerticalDistance)
+            {
+                predictedPosition = currentPosition + targetVelocity.normalized * maxVerticalDistance;
+            }
+
+            return predictedPosition;
+
         }
     }
 }

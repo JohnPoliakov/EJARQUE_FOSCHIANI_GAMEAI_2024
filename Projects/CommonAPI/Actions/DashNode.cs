@@ -22,9 +22,21 @@ namespace CommonAPI.Actions
 
             if(direction != Vector3.zero)
                 actionList.Add(new AIActionDash(direction));
+            else
+            {
+                actionList.Add(new AIActionDash(GetRandomDirection(playerInfo)));
+            }
             return true; // Success
         }
 
+
+        private Vector3 GetRandomDirection(PlayerInformations playerInfo)
+        {
+            float num = UnityEngine.Random.Range(-1f, 1f);
+            float num2 = UnityEngine.Random.Range(-1f, 1f);
+            Vector3 normalized = new Vector3(num, 0f, num2).normalized;
+            return playerInfo.Transform.Position + normalized * 5f;
+        }
 
         private Vector3 ComputeDirection(PlayerInformations playerInfo)
         {

@@ -16,7 +16,7 @@ namespace CommonAPI.Actions
         public override bool Execute(PlayerInformations playerInfo, List<AIAction> actionList)
         {
 
-            if (target == null || target.Invoke().BonusOnPlayer[EBonusType.Invulnerability] > 0)
+            if (target == null || target.Invoke() == null|| target.Invoke().BonusOnPlayer[EBonusType.Invulnerability] > 0)
             {
 
                 actionList.Add(new AIActionReload());
