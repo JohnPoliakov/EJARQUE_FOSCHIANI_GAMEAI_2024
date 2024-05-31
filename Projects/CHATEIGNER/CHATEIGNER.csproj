@@ -120,8 +120,8 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UwU.cs" />
     <EmbeddedResource Include="Properties\CHATEIGNER.rd.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -132,6 +132,9 @@
   <ItemGroup>
     <Reference Include="AI_BehaviorTree_AIGameUtility">
       <HintPath>..\RedLock\Red Lock_Data\Managed\AI_BehaviorTree_AIGameUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="CommonAPI">
+      <HintPath>..\CommonAPI\bin\x64\Release\CommonAPI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\Program Files\Unity\Hub\Editor\2022.3.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>

@@ -135,6 +135,12 @@
       <HintPath>..\RedLock\Red Lock_Data\Managed\AI_BehaviorTree_AIGameUtility.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="CHATEIGNER">
+      <HintPath>Projects\CHATEIGNER\bin\x64\Release\CHATEIGNER.dll</HintPath>
+    </Reference>
+    <Reference Include="FOSCHIANI">
+      <HintPath>Projects\FOSCHIANI\bin\x64\Release\FOSCHIANI.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\Program Files\Unity\Hub\Editor\2022.3.30f1\Editor\Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
