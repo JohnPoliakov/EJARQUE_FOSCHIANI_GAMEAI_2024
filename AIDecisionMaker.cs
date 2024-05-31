@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using FOSCHIANI;
+using CHATEIGNER;
 using UnityEngine.Assertions;
 
 namespace AI_BehaviorTree_AIImplementation
